@@ -4,6 +4,7 @@
 
 library(reshape2)
 library(qdapTools)
+library(plyr)
 
 #--------------------------------------------------------------------------------------------
 
@@ -161,6 +162,21 @@ plot_r_indicator <- function(rel_id,
 
 
 #to-do função que calcula a variação anual de um indicador
+cgrowth <- function(dfx){
+  
+  dfx <- ddply(dfx,.(country_id, country_indicator_id),transform,
+               annual_growth =c(NA,exp(diff(log(data_value)))-1))
+  return(dfx[['annual_growth']])
+  
+}
+
+rgrowth <- function(dfx){
+  
+  dfx <- ddply(dfx,.(relationship_id, relationship_indicator_id),transform,
+               annual_growth =c(NA,exp(diff(log(data_value)))-1))
+  return(dfx[['annual_growth']])
+  
+}
 
 #to-do função que correlaciona indicador A no período n e indicador B no período (n - x)
 #--------------------------------------------------------------------------------------------
