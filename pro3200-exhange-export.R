@@ -3,6 +3,7 @@
 #garantir que esses módulos estão instalados para funcionamento correto da aplicação
 
 library(reshape2)
+library(qdapTools)
 
 #--------------------------------------------------------------------------------------------
 
@@ -19,88 +20,91 @@ data_directory <- "F:/Google Drive/Privado/Faculdade/Estatística 2020/Dados" #Di
 #--------------------------------------------------------------------------------------------
 #---------------------------------- CLASSES E FUNÇÕES ---------------------------------------
 
+#to-do: Função que passa os dados sobre taxa de câmbio para o modelo de dados
 
-#todo: Função que passa os dados sobre taxa de câmbio para o modelo de dados
-#todo: função que passa os dados sobre comércio para o modelo de dados
+#to-do: função que passa os dados sobre comércio para o modelo de dados
 sq_trade_data <- function(source, mcountries, mcountry_relationships, mcountry_indicators, mrelationship_indicators, mcountry_indicator_series, mrelationship_indicator_series){
-  source <- melt(source,id.vars = names(source[1:5]), variable.name = "year")
+  source <- melt(source,id.vars = names(source[1:5]), variable.name = "year") #passa os dados pra formato longo
   for(i in 1:nrow(source)){
     print(paste('iteração: ', i))
-    new_country = T
-    new_relationship = T
-    new_country_indicator = T
-    new_relationship_indicator = T
     
-    #confere se reporter é um país novo
+    #confere se a coluna "reporter" é um país novo
+    new_country = T
     for(j in 1:nrow(mcountries)){
       if(source[i,1] == mcountries[j,2]){
         new_country = F
         break()
       }
     }
-    
-    if(new_country){
+    if(new_country){ #se for novo adiciona na tabela de países
       mcountries <- rbind(mcountries, list(nrow(mcountries) +1, source[i,1]))
     }
+    
     reporter_id <- mcountries[mcountries[["country_name"]] == source[i,1], 1]
-    if(source[i,2] != '...'){
-      new_country = T
+    
+    
+    if(source[i,2] != '...'){ #quando a linha trata de dados entre dois países (exportação, importação, etc)
+      
       
       #confere se partner é um país novo
+      new_country = T
       for(j in 1:nrow(mcountries)){
         if(source[i,2] == mcountries[j,2]){
           new_country = F
           break()
         }
       }
-      if(new_country){
+      if(new_country){ #se for novo, adiciona na tabela de países
         mcountries <- rbind(mcountries, list(nrow(mcountries) +1, source[i, 2]))
       }
       partner_id <- mcountries[mcountries[['country_name']] == source[i, 2], 1]
       
       #confere se o relacionamento reporter/partner é novo
+      new_relationship = T
       for(j in 1:nrow(mcountry_relationships)){
         if((reporter_id == mcountry_relationships[j, 2])&(partner_id == mcountry_relationships[j, 3])){
           new_relationship = F
           break()
         }
       }
-      if(new_relationship){
+      if(new_relationship){ #se for novo, adiciona na tabela de relacionamentos
         mcountry_relationships <- rbind(mcountry_relationships, list(nrow(mcountry_relationships) + 1, reporter_id, partner_id))
       }
       relationship_id <- mcountry_relationships[(mcountry_relationships[['country1_id']] == reporter_id)&(mcountry_relationships[['country2_id']] == partner_id), 1]
 
-      indicator_name <- paste(source[i, 3], source[i, 4], source[i, 5])
+      indicator_name <- paste(source[i, 3], source[i, 4], source[i, 5]) #nome dos indicadores tá feio -> ponto de melhoria
       
       #confere se o indicador de relacionamente é novo
+      new_relationship_indicator = T
       for(j in 1:nrow(mrelationship_indicators)){
         if(indicator_name == mrelationship_indicators[j,2]){
           new_relationship_indicator = F
           break()
         }
       }
-      if(new_relationship_indicator){
+      if(new_relationship_indicator){ #se for novo, adiciona na tabela de indicadores de relacionamento
         mrelationship_indicators <- rbind(mrelationship_indicators, list(nrow(mrelationship_indicators) + 1, indicator_name))
       }
       relationship_indicator_id <- mrelationship_indicators[mrelationship_indicators[['relationship_indicator_name']] == indicator_name, 1]
       
-      #adiciona dados à tabela de series
+      #adiciona dados à tabela de séries
       mrelationship_indicator_series <- rbind(
         mrelationship_indicator_series,
         list(nrow(mrelationship_indicator_series) + 1, relationship_id, relationship_indicator_id, as.Date(source[i,6], format = "X%Y"), source[i,7])
       )
-    }else{
+    }else{ #caso a linha trate de dados do país isolado
       
-      indicator_name <- paste(source[i,4], source[i,5])
+      indicator_name <- paste(source[i,4], source[i,5]) #nome dos indicadores tá feio -> ponto de melhoria
       
       #confere se o indicador de país é novo
+      new_country_indicator = T
       for(j in 1:nrow(mcountry_indicators)){
         if(indicator_name == mcountry_indicators[j, 2]){
           new_country_indicator = F
           break()
         }
       }
-      if(new_country_indicator){
+      if(new_country_indicator){ #se for novo, adicionar na tabela de indicador de país
         mcountry_indicators <- rbind(mcountry_indicators, list((nrow(mcountry_indicators) + 1), indicator_name))
       }
       
@@ -126,6 +130,39 @@ sq_trade_data <- function(source, mcountries, mcountry_relationships, mcountry_i
      )
     )
 }
+
+#to-do função que plota a time series de um indicador de país
+plot_c_indicator <- function(country_id, indicator_id, count = countries, mcountry_indicator_series = country_indicator_series,
+                             mcountry_indicators = country_indicators){ #o conceito é esse, mas depois a gente tem que fazer mudanças estéticas 
+  plot(
+    x = mcountry_indicator_series[(mcountry_indicator_series[['country_id']] == country_id)&(mcountry_indicator_series[['country_indicator_id']] == indicator_id), 4],
+    y = mcountry_indicator_series[(mcountry_indicator_series[['country_id']] == country_id)&(mcountry_indicator_series[['country_indicator_id']] == indicator_id), 5],
+    main = lookup(indicator_id, mcountry_indicators[1], mcountry_indicators[2]),
+    type = "l",
+    xlab = NULL,
+    ylab = "Millions of US$", #mudar depois
+    col = 'cornflowerblue'
+  )
+}
+
+#to-do função que plota a time series de um indicador de relacionamento
+plot_r_indicator <- function(rel_id, 
+                             ind_id, 
+                             con = countries, 
+                             rel = country_relationships, 
+                             rel_ind = relationship_indicator_series,
+                             rel_ind_series = relationship_indicator_series){ #o conceito é esse, mas depois a gente tem que fazer mudanças estéticas 
+  plot(
+    x = rel_ind_series[(rel_ind_series[['relationship_id']] == rel_id)&(rel_ind_series[['relationship_indicator_id']] == ind_id), 4],
+    y = rel_ind_series[(rel_ind_series[['relationship_id']] == rel_id)&(rel_ind_series[['relationship_indicator_id']] == ind_id), 5],
+
+  )
+}
+
+
+#to-do função que calcula a variação anual de um indicador
+
+#to-do função que correlaciona indicador A no período n e indicador B no período (n - x)
 #--------------------------------------------------------------------------------------------
         
 #--------------------------------------------------------------------------------------------
@@ -180,6 +217,8 @@ relationship_indicator_series <- data.frame(
 
 #--------------------------------------------------------------------------------------------
 #códigos teporarios para teste DELETE THIS
+
+#Abaixo um exemplo de como passar os dados para o modelo de dados
 testsource <- read.csv('wits_en_trade_summary_allcountries_allyears/en_USA_AllYears_WITS_Trade_Summary.CSV')
 
 ext <- sq_trade_data(testsource, countries, 
@@ -197,6 +236,24 @@ relationship_indicators <- ext[[4]]
 country_indicator_series <- ext[[5]]
 relationship_indicator_series <- ext[[6]]
 
+#encontrei um pacote chamado qdapTools, com funções de lookup, que são úteis para navegar nosso modelo de dados
+#abaixo, eu peguei o nome do país reporter e partner, com base no id de relacionamento
+#provavelmente essa é a situação mais difícil que a gente vai passar
 
+reporter_id <- lookup(relationship_indicator_series$relationship_id, country_relationships$relationship_id, country_relationships$country1_id)
+partner_id <- lookup(relationship_indicator_series$relationship_id, country_relationships$relationship_id, country_relationships$country2_id)
+reporter_name <- lookup(reporter_id, countries$country_id, countries$country_name)
+partner_name <- lookup(partner_id, countries$country_id, countries$country_name)
 
-        
+#para plotar time series de um indicador
+
+plot_c_indicator(
+  lookup("United States", countries$country_name, countries$country_id),
+  lookup("Development GDP (current US$ Mil)", country_indicators$country_indicator_name, country_indicators$country_indicator_id)
+  )
+ #ou
+
+plot_c_indicator(2,2)
+
+#time series de exportações de exportações de produtos animais (indicador 5) entre os EUA e o méxico (relacionamento 7)
+plot_r_indicator(7, 5)
