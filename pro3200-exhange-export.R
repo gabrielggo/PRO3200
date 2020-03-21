@@ -13,7 +13,7 @@ library(plyr)
 
 # ELEMENTOS QUE DEVEM SER ALTERADOS MANUALMENTE PARA A EXECUÇÃO DO PROGRAMA EM QUALQUE MICRO   
 
-data_directory <- "F:/Google Drive/Privado/Faculdade/Estatística 2020/Dados" #Diretório que contém os dados 
+data_directory <- "F:/Google Drive/Privado/Faculdade/Estatística 2020/PRO3200" #Diretório que contém os dados 
 
 
 #--------------------------------------------------------------------------------------------
@@ -24,10 +24,16 @@ data_directory <- "F:/Google Drive/Privado/Faculdade/Estatística 2020/Dados" #Di
 #to-do: Função que passa os dados sobre taxa de câmbio para o modelo de dados
 
 #to-do: função que passa os dados sobre comércio para o modelo de dados
-sq_trade_data <- function(source, mcountries, mcountry_relationships, mcountry_indicators, mrelationship_indicators, mcountry_indicator_series, mrelationship_indicator_series){
+sq_trade_data <- function(source, 
+                          mcountries = countries, 
+                          mcountry_relationships = country_relationships, 
+                          mcountry_indicators = country_indicators, 
+                          mrelationship_indicators = relationship_indicators, 
+                          mcountry_indicator_series = country_indicator_series, 
+                          mrelationship_indicator_series = relationship_indicator_series){
+  
   source <- melt(source,id.vars = names(source[1:5]), variable.name = "year") #passa os dados pra formato longo
   for(i in 1:nrow(source)){
-    print(paste('iteração: ', i))
     
     #confere se a coluna "reporter" é um país novo
     new_country = T
@@ -132,6 +138,7 @@ sq_trade_data <- function(source, mcountries, mcountry_relationships, mcountry_i
     )
 }
 
+
 #to-do função que plota a time series de um indicador de país
 plot_c_indicator <- function(country_id, indicator_id, count = countries, mcountry_indicator_series = country_indicator_series,
                              mcountry_indicators = country_indicators){ #o conceito é esse, mas depois a gente tem que fazer mudanças estéticas 
@@ -231,11 +238,33 @@ relationship_indicator_series <- data.frame(
   stringsAsFactors = FALSE
 )
 
+#coleta todos os dados sobre exchange
+files <- list.files('wits_en_trade_summary_allcountries_allyears', full.names = TRUE)
+
+for(i in files){
+  print(i)
+  ext <- sq_trade_data(read.csv(i), countries, 
+                       country_relationships, 
+                       country_indicators, 
+                       relationship_indicators, 
+                       country_indicator_series, 
+                       relationship_indicator_series
+  )
+  
+  countries <- ext[[1]]
+  country_relationships <- ext[[2]]
+  country_indicators <- ext[[3]]
+  relationship_indicators <- ext[[4]]
+  country_indicator_series <- ext[[5]]
+  relationship_indicator_series <- ext[[6]]
+}
+
+
 #--------------------------------------------------------------------------------------------
 #códigos teporarios para teste DELETE THIS
 
 #Abaixo um exemplo de como passar os dados para o modelo de dados
-testsource <- read.csv('wits_en_trade_summary_allcountries_allyears/en_USA_AllYears_WITS_Trade_Summary.CSV')
+testsource <- read.csv('wits_en_trade_summary_allcountries_allyears/en_ABW_AllYears_WITS_Trade_Summary.CSV')
 
 ext <- sq_trade_data(testsource, countries, 
                      country_relationships, 
@@ -273,3 +302,6 @@ plot_c_indicator(2,2)
 
 #time series de exportações de exportações de produtos animais (indicador 5) entre os EUA e o méxico (relacionamento 7)
 plot_r_indicator(7, 5)
+                               
+
+
