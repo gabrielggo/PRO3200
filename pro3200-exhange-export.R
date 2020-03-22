@@ -116,8 +116,14 @@ sq_trade_data <- function(source,
   }
   source <- melt(source,id.vars = names(source[1:5]), variable.name = "year")
   for(i in 1:nrow(source)){
+    reporter_id = lookup(source[i,1], mcountries[['country_name']], mcountries[['country_id']])
     if(source[i,2] != '...'){
       #adiciona dados à tabela de séries
+      partner_id = lookup(source[i,2], mcountries[['country_name']], mcountries[['country_id']])
+      ss <- mcountry_relationships[mcountry_relationships[['country1_id']]  == reporter_id, ]
+      relationship_id = lookup(partner_id, ss[['country2_id']], ss[['relationship_id']])
+      indicator_name <- paste(source[i,3],source[i,4],source[i,5])
+      relationship_indicator_id <- lookup(indicator_name, mrelationship_indicators[['relationship_indicator_name']], mrelationship_indicators[['relationship_indicator_id']])
       mrelationship_indicator_series <- rbind(
         mrelationship_indicator_series,
         list(nrow(mrelationship_indicator_series) + 1, relationship_id, relationship_indicator_id, as.Date(source[i,6], format = "X%Y"), source[i,7])
@@ -125,6 +131,8 @@ sq_trade_data <- function(source,
       
     }else{
       #adiciona dado na à tabela de séries de país
+      indicator_name <- paste(source[i,4], source[i,5])
+      country_indicator_id = lookup(indicator_name, mcountry_indicators[['country_indicator_name']], mcountry_indicators[['country_indicator_id']])
       mcountry_indicator_series <- rbind(
         mcountry_indicator_series,
         list((nrow(mcountry_indicator_series) + 1), reporter_id, country_indicator_id, as.Date(source[i, 6], format = "X%Y"), source[i, 7])
@@ -246,7 +254,7 @@ relationship_indicator_series <- data.frame(
 )
 
 #coleta todos os dados sobre exchange
-files <- list.files('wits_en_trade_summary_allcountries_allyears', full.names = TRUE)
+files <- list.files('dados_1afase', full.names = TRUE)
 
 for(i in files){
   print(i)
@@ -271,10 +279,10 @@ for(i in files){
 biggest_economies <- get_biggest_economies() #lista com todos países que em algum momento estiveram entre as cinco maiores
 
 #médias de exportação
-mean_exports <- get_mean_exports(biggest_economies) #tabela: 1a países, 2a médias exportacao, 3a desvio padrao da media
+mean_exports <- get_mean_exports(biggest_economies) #tabela 5 linhas e 3: 1a países, 2a médias exportacao, 3a desvio padrao da media
 
 #5 maiores exportadores
-fivebiggest <- calc_5biggest(mean_exports) #tabela com 5 linhas: 1a paíes, 2a medias exportacao, 3a delta
+fivebiggest <- calc_5biggest(mean_exports) #tabela com 5 linhas 3 colunas: 1a paíes, 2a medias exportacao, 3a delta
 
 
 #maiores setores
