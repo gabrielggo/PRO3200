@@ -32,7 +32,6 @@ sq_trade_data <- function(source,
                           mcountry_indicator_series = country_indicator_series, 
                           mrelationship_indicator_series = relationship_indicator_series){
   
-  source <- melt(source,id.vars = names(source[1:5]), variable.name = "year") #passa os dados pra formato longo
   for(i in 1:nrow(source)){
     
     #confere se a coluna "reporter" é um país novo
@@ -94,11 +93,7 @@ sq_trade_data <- function(source,
       }
       relationship_indicator_id <- mrelationship_indicators[mrelationship_indicators[['relationship_indicator_name']] == indicator_name, 1]
       
-      #adiciona dados à tabela de séries
-      mrelationship_indicator_series <- rbind(
-        mrelationship_indicator_series,
-        list(nrow(mrelationship_indicator_series) + 1, relationship_id, relationship_indicator_id, as.Date(source[i,6], format = "X%Y"), source[i,7])
-      )
+
     }else{ #caso a linha trate de dados do país isolado
       
       indicator_name <- paste(source[i,4], source[i,5]) #nome dos indicadores tá feio -> ponto de melhoria
@@ -117,13 +112,25 @@ sq_trade_data <- function(source,
       
       country_indicator_id <- mcountry_indicators[mcountry_indicators[['country_indicator_name']] == indicator_name, 1] 
         
+    }
+  }
+  source <- melt(source,id.vars = names(source[1:5]), variable.name = "year")
+  for(i in 1:nrow(source)){
+    if(source[i,2] != '...'){
+      #adiciona dados à tabela de séries
+      mrelationship_indicator_series <- rbind(
+        mrelationship_indicator_series,
+        list(nrow(mrelationship_indicator_series) + 1, relationship_id, relationship_indicator_id, as.Date(source[i,6], format = "X%Y"), source[i,7])
+      )
+      
+    }else{
       #adiciona dado na à tabela de séries de país
       mcountry_indicator_series <- rbind(
         mcountry_indicator_series,
         list((nrow(mcountry_indicator_series) + 1), reporter_id, country_indicator_id, as.Date(source[i, 6], format = "X%Y"), source[i, 7])
       )
     }
-    }
+  }
   
 
   return(
@@ -260,6 +267,26 @@ for(i in files){
 }
 
 
+#maiores economias
+biggest_economies <- get_biggest_economies() #lista com todos países que em algum momento estiveram entre as cinco maiores
+
+#médias de exportação
+mean_exports <- get_mean_exports(biggest_economies) #tabela: 1a países, 2a médias exportacao, 3a desvio padrao da media
+
+#5 maiores exportadores
+fivebiggest <- calc_5biggest(mean_exports) #tabela com 5 linhas: 1a paíes, 2a medias exportacao, 3a delta
+
+
+#maiores setores
+biggest_sectors <- get_biggest_sectors() #lista com todos países que em algum momento estiveram entre as cinco maiores
+
+#médias de exportação
+mean_sector_exports <- get_mean_sector_exports(biggest_sectors) #tabela: 1a países, 2a médias exportacao, 3a desvio padrao da media
+
+#5 maiores setores
+fivebiggestSectors <- cal_5biggestSectors(mean_sector_exports)#tabela com 5 linhas: 1a paíes, 2a medias exportacao, 3a delta
+
+
 #--------------------------------------------------------------------------------------------
 #códigos teporarios para teste DELETE THIS
 
@@ -302,6 +329,18 @@ plot_c_indicator(2,2)
 
 #time series de exportações de exportações de produtos animais (indicador 5) entre os EUA e o méxico (relacionamento 7)
 plot_r_indicator(7, 5)
-                               
+                              
+
+                              
+                              ######
+teste <- country_indicator_series[(country_indicator_series$country_id == 12)&(country_indicator_series$country_indicator_id == 2), ],
+print(teste)
+
+
+##################################################################################
+
+
+
+
 
 
