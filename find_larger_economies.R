@@ -1,27 +1,40 @@
-find_larger_economies(y, c_indicators = country_indicators, c_ind_series = country_indicator_series){
-  # recebe um ano como argumento obrigatório
-  # retorna um vetor de comprimento cinco com o id das cinco maiores economias naquele ano 
-  
-  #encontrar id do gdp
+get_biggest_economies <- function(c_indicators = country_indicators, c_ind_series = country_indicator_series){
   id_gdp = lookup('Development GDP (current US$ Mil)', c_indicators[['country_indicator_name']], c_indicators[['country_indicator_id']])
+  first_ite = T
+  economies <- c()
+  for(i in 1988:2018){
+    print(i)
+    #selecionar os valores de GDP do ano correspondente
+    gdp <- c_ind_series[(c_ind_series[['country_indicator_id']] == id_gdp)&(year(c_ind_series[['data_time']]) == i),]
+    gdp <- gdp[order(gdp$data_value, decreasing = TRUE),]
+    gdp <- gdp[1:6,]
+  if(first_ite){
+    first_ite = FALSE
+  }else{
+    for(j in 1:nrow(gdp)){
+      new_country = T
+      for(k in economies){
+        if(gdp[j, 2] == k){
+          new_country = F
+          break()
+        }
+      }
+      if(new_country){
+        economies <- append(economies, gdp[j, 2])
+      }
+    }
+    
+  }
   
-  #selecionar os valores de GDP do ano correspondente
-  gpd <- country_indicator_series[(country_indicator_series[['country_indicator_id']] == id_gdp)&(year(country_indicator_series[['data_time']]) == y),]
-  gdp <- order(gdp[['data_value']])
-  gdp <- gpd[1:5]
-  return(gdp[['country_id']])
+  }
+  return(economies)
 }
-
-
-find_markets(y, i, c = countries, rel = country_relationships, rel_ind_series = relationship_indicator_series){
-  #Recebe um ano e o id de um indicador (exportação de um determinado produto)
-  #Retorna o total e
   
-  id_mundo = lookup('World', c[['country_name']], c[['country_id']])
-  id_mundo_mundo = rel[(rel[['countr1_id']] == id_mundo)&(rel[['country2_id']] == id_mundo)]
   
-}
+
 
 library(xlsx)
+library(lubridate)
 
-write.xlsx(relationship_indicators, 'F:/Google Drive/Privado/Faculdade/Estatística 2020/PRO3200/relationship_indicators.xlsx')
+files <- list.files('dados_1afase', full.names = TRUE)
+
