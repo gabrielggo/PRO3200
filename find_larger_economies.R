@@ -71,7 +71,7 @@ write.csv(country_relationships, file = 'country_relationships.csv', sep = ',', 
 write.csv(country_indicators, file = 'country_indicators.csv', sep = ',', dec = '.')
 write.csv(relationship_indicators, file = 'relationship_indicators.csv', sep = ',', dec = '.')
 write.csv(country_indicator_series, file = 'country_indicator_series.csv', sep = ',', dec = '.')
-write.csv(relationship_indicator_series, file = 'relationship_indicator_serires.csv', sep = ',', dec = '.')
+write.csv(relationship_indicator_series, file = 'relationship_indicator_series.csv', sep = ',', dec = '.')
 
 
 library(xlsx)
