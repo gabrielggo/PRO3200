@@ -274,6 +274,12 @@ for(i in files){
   relationship_indicator_series <- ext[[6]]
 }
 
+countries <- read.csv('countries.csv', header = T, sep = ',', dec = '.', stringsAsFactors = F, colClasses=c("NULL",NA,NA))
+country_relationships <- read.csv('country_relationships.csv', header = T, sep = ',', dec = '.', stringsAsFactors = F,colClasses=c("NULL",NA,NA,NA))
+country_indicators <- read.csv('country_indicators.csv', header = T, sep = ',', dec = '.', stringsAsFactors = F, colClasses=c("NULL",NA,NA))
+relationship_indicators <- read.csv('relationship_indicators.csv', header = T, sep = ',', dec = '.', stringsAsFactors = F, colClasses=c("NULL",NA,NA))
+country_indicator_series <- read.csv('country_indicator_series.csv', header = T, sep = ',', dec = '.', stringsAsFactors = F, colClasses=c("NULL",NA,NA, NA, NA, NA ))
+relationship_indicator_series <- read.csv('relationship_indicator_series.csv', header = T, sep = ',', dec = '.', stringsAsFactors = F, colClasses=c("NULL",NA,NA,NA, NA, NA))
 
 #maiores economias
 biggest_economies <- get_biggest_economies() #lista com todos países que em algum momento estiveram entre as cinco maiores
