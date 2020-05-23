@@ -6,9 +6,12 @@ deflator_table = read.csv('API_NY.GDP.DEFL.ZS_DS2_en_csv_v2_1070444.csv', header
 deflator <- function(t, d){
   
   reporter = t[1 , 1]
+  reporter = trimws(reporter)
+  if(reporter == 'World'){
+    reporter = 'United States'
+  }
 
     dv <- d[d[1] == reporter, 33:63]
-    print(dv)
 
   #A próxima parte existe para corrigir os 'buracos'com valores NA 
   NonNAindex = which(!is.na(dv[1,]))
@@ -31,6 +34,8 @@ deflator <- function(t, d){
   dv = rev(dv)
   dv[1,] = dv[1,]/dv[1,1]
   
+  print(dv)
+  
   for(i in 1:nrow(t)){
     t[i, 6:36] = t[i, 6:36]/dv
   }
@@ -38,3 +43,5 @@ deflator <- function(t, d){
   return(t)
 }
 
+
+write.csv(trade2, 'tabela_mundo_corrigida.CSV', row.names = FALSE)
