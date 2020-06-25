@@ -3,7 +3,7 @@ deflator <- function(t){
   d = deflator_table = read.csv('API_NY.GDP.DEFL.ZS_DS2_en_csv_v2_1070444.csv', header = TRUE, sep = ',', dec = '.', stringsAsFactors = FALSE)
   reporter = t[1 , 1]
   
-  dv <- d[d[1] == reporter, 33:63]
+  dv <- d[d[1] == 'United States', 33:63]
   
   #A próxima parte existe para corrigir os 'buracos'com valores NA 
   NonNAindex = which(!is.na(dv[1,]))
@@ -46,7 +46,7 @@ crescimentoAnual <- function(trade_data){
   #converte os dados absolutos ano a ano para crescimento logarítmico
   
   for(i in 1:nrow(trade_data)){
-    
+    print(i)
     trade_data[i, 6:35] = log(trade_data[i, 6:35]/trade_data[i, 7:36])
   }
   
@@ -69,6 +69,31 @@ tHipoteseCrescimento <- function(growth_data){
   }
 }
 
+agrega_menores_setores <- function(trade_data){
+  setorespequenos = c('Animal', 'Footwear', 'Hides and Skins', 'Minerals', 'Vegetables')
+  
+  menores_setores = trade_data[
+    trade_data[['Product.categories']] == ('Animal')|
+      trade_data[['Product.categories']] == ('Footwear')|
+      trade_data[['Product.categories']] == ('Hides and Skins')|
+      trade_data[['Product.categories']] == ('Minerals')|
+      trade_data[['Product.categories']] == ('Vegetables')|
+      trade_data[['Product.categories']] == ('Miscellaneous'),
+  ]
+  
+  trade_data <- trade_data[
+    trade_data[['Product.categories']] != ('Animal')&
+      trade_data[['Product.categories']] != ('Footwear')&
+      trade_data[['Product.categories']] != ('Hides and Skins')&
+      trade_data[['Product.categories']] != ('Minerals')&
+      trade_data[['Product.categories']] != ('Vegetables')&
+      trade_data[['Product.categories']] != ('Miscellaneous'),
+    ]
+  novalinha = colSums(menores_setores[,6:36])
+  
+  trade_data <- rbind(trade_data, c(trade_data[1,1], trade_data[1,2], 'Other Categories', trade_data[1,4], trade_data[1,5], novalinha))
+  return(trade_data)
+}
 
 
 #teste
@@ -92,6 +117,9 @@ alemanha_exp = getExportacoesPaises(alemanha)
 # TERCEIRO PASSO: AJUSTAR PELA INFLAÇÃO 
 
 ale_exp_aj = deflator(alemanha_exp)
+
+#
+agrega_menores_setores(ale_exp_aj)
 
 # QUARTO PASSO: TRANSFORMAR EM CRESCIMENTO ANUAL
 

@@ -1,10 +1,11 @@
 setwd('F:/Google Drive/Privado/Faculdade/Estatística 2020/PRO3200')
 
 trade = read.csv('wits_en_trade_summary_allcountries_allyears/en_Wld_AllYears_WITS_Trade_Summary.CSV', header = TRUE, sep = ',', dec = '.', stringsAsFactors = FALSE)
-deflator_table = read.csv('API_NY.GDP.DEFL.ZS_DS2_en_csv_v2_1070444.csv', header = TRUE, sep = ',', dec = '.', stringsAsFactors = FALSE)
 
-deflator <- function(t, d){
+deflator <- function(t){
   
+  d = read.csv('API_NY.GDP.DEFL.ZS_DS2_en_csv_v2_1070444.csv', header = TRUE, sep = ',', dec = '.', stringsAsFactors = FALSE)
+
   reporter = t[1 , 1]
   reporter = trimws(reporter)
   if(reporter == 'World'){
@@ -33,8 +34,6 @@ deflator <- function(t, d){
   
   dv = rev(dv)
   dv[1,] = dv[1,]/dv[1,1]
-  
-  print(dv)
   
   for(i in 1:nrow(t)){
     t[i, 6:36] = t[i, 6:36]/dv
