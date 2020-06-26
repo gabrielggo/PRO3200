@@ -1,3 +1,5 @@
+library(gmodels)
+
 deflator <- function(t){
   
   d = deflator_table = read.csv('API_NY.GDP.DEFL.ZS_DS2_en_csv_v2_1070444.csv', header = TRUE, sep = ',', dec = '.', stringsAsFactors = FALSE)
@@ -40,14 +42,20 @@ getExportacoesPaises <- function(trade_data){
   return(trade_data[(trade_data[['Indicator']] == 'Export(US$ Mil)')|(trade_data[['Indicator']] == 'Exports (in US$ Mil)'), ])
 }
 
+getProductshare <- function(trade_data){
+  
+  #Retorna só os dados de composição da exportação (relativos)
+  
+  return(trade_data[(trade_data[['Indicator']] == 'Export Product share(%)'), ])
+}
 
 crescimentoAnual <- function(trade_data){
   
   #converte os dados absolutos ano a ano para crescimento logarítmico
   
   for(i in 1:nrow(trade_data)){
-    print(i)
-    trade_data[i, 6:35] = log(trade_data[i, 6:35]/trade_data[i, 7:36])
+
+    trade_data[i, 6:35] = log(as.numeric(trade_data[i, 6:35])/as.numeric(trade_data[i, 7:36]))
   }
   
   return(trade_data)
@@ -55,11 +63,12 @@ crescimentoAnual <- function(trade_data){
 
 tHipoteseCrescimento <- function(growth_data){
   
+  print(growth_data[16, 3])
   for(i in 1:nrow(growth_data)){
+    print(i)
+    teste = t.test(as.numeric(growth_data[i, 6:35]), as.numeric(growth_data[16, 6:35]))
     
-    teste = t.test(growth_data[i, 6:35], growth_data[21, 6:35])
-    
-    if(teste$p.value <= 0.1){
+    if(teste$p.value >= 0.1){
       print(growth_data[i, 3])
       print(teste)
       print('')
@@ -95,6 +104,83 @@ agrega_menores_setores <- function(trade_data){
   return(trade_data)
 }
 
+tRegressao_setor <- function(td){
+  
+  setores <- c()
+  
+  anos = c(2018:1988)
+  anos_depois = c(2018:2008)
+  anos_antes = c(2007:1988)
+  
+  historico_estimativa <- c()
+  historico_inf <- c()
+  historico_sup <- c()
+  
+  depois_estimativa <- c()
+  depois_inf <- c()
+  depois_sup <- c()
+  
+  antes_estimativa <- c()
+  antes_inf <- c()
+  antes_sup <- c()
+  
+  beta_estimativa <- c()
+  beta_inf <- c()
+  beta_sup <- c()
+  
+  allExports_hist = as.numeric(td[16, 6:36])
+  
+ 
+  for(i in 1:nrow(td)){
+    
+    setores[i] <- td[i, 3]
+    
+    setor_hist = as.numeric(td[i, 6:36])
+    setor_depois = as.numeric(td[i, 6:16])
+    setor_antes = as.numeric(td[i, 17:36])
+    
+    historico = cor.test(setor_hist, anos, conf.level = 0.9)
+    depois = cor.test(setor_depois, anos_depois, conf.level = 0.9)
+    antes = cor.test(setor_antes, anos_antes, conf.level = 0.9)
+    beta = cor.test(setor_hist, as.numeric(td[16, 6:36]), conf.level = 0.9)
+    
+    historico_estimativa[i] <- historico$estimate
+    historico_inf[i] <- historico$conf.int[1]
+    historico_sup[i] <- historico$conf.int[2]
+    
+    depois_estimativa[i] <- depois$estimate
+    depois_inf[i] <- depois$conf.int[1]
+    depois_sup[i] <- depois$conf.int[2]
+    
+    antes_estimativa[i] <- antes$estimate
+    antes_inf[i] <- antes$conf.int[1]
+    antes_sup[i] <- antes$conf.int[2]
+    
+    beta_estimativa[i] <- beta$estimate
+    beta_inf[i] <- beta$conf.int[1]
+    beta_sup[i] <- beta$conf.int[2]
+  }
+  
+  correlacoes <- data.frame(
+    setores,
+    historico_estimativa,
+    historico_inf,
+    historico_sup,
+    depois_estimativa,
+    depois_inf,
+    depois_sup,
+    antes_estimativa,
+    antes_inf,
+    antes_sup,
+    beta_estimativa,
+    beta_inf,
+    beta_sup,
+    stringsAsFactors = FALSE
+  )
+  
+  return(correlacoes)
+}
+
 
 #teste
 setwd('F:/Google Drive/Privado/Faculdade/Estatística 2020/PRO3200')
@@ -108,23 +194,26 @@ exports = getExportacoesPaises(trade)
 
 # PRIMEIRO PASSO (PUXAR DADOS DO PAÍS | EX: ALEMANHA)
 
-alemanha = read.csv('wits_en_trade_summary_allcountries_allyears/en_DEU_AllYears_WITS_Trade_Summary.CSV', header = TRUE, sep = ',', dec = '.', stringsAsFactors = FALSE)
+pais = read.csv('wits_en_trade_summary_allcountries_allyears/en_CHN_AllYears_WITS_Trade_Summary.CSV', header = TRUE, sep = ',', dec = '.', stringsAsFactors = FALSE)
 
 # SEGUNDO PASSO: PEGAR SOMENTE DADOS DE EXPORTAÇAO
 
-alemanha_exp = getExportacoesPaises(alemanha)
+pais = getExportacoesPaises(pais)
 
 # TERCEIRO PASSO: AJUSTAR PELA INFLAÇÃO 
 
-ale_exp_aj = deflator(alemanha_exp)
+pais = deflator(pais)
 
 #
-agrega_menores_setores(ale_exp_aj)
+pais = agrega_menores_setores(pais)
 
 # QUARTO PASSO: TRANSFORMAR EM CRESCIMENTO ANUAL
 
-ale_crs = crescimentoAnual(ale_exp_aj)
+pais = crescimentoAnual(pais)
 
 # QUINTO PASSO: TESTE HIPOTESE
 
-tHipoteseCrescimento(ale_)
+tHipoteseCrescimento(pais)
+
+
+
