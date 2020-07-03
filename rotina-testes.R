@@ -75,6 +75,8 @@ fra_cres = crescimentoAnual(fra_abs)
 #PRIMEIRA ANÁLISE: REGRESSÃO LINEAR DESVIO PADRÃO DO PRODUCT EXPORT SHARE
 #MOTIVO: SE HOUVER MUDANÇA NO DESVIO PADRÃO PODEMOS AFIRMAR QUE A COMPOSIÇÃO MUDOU
 anos = c(2018:1988)
+anosA = c(2007:1988)
+anosD = c(2018:2008)
 
 desvios = c()
   
@@ -119,5 +121,49 @@ for(i in 1:nrow(usa_rel)){
 plot(x = c(2018:1989), y = desvios, type = 'b')
 
 cor.test(desvios, c(2018:1989)) #p-valor 2.006
+
+#TERCEIRA E ÚLTIMA ANÁLISE: SEPARAR ENTRE ANTES E DEPOIS DE 2008
+#MOTIVAÇÃO: NA ANÁLISE EXPLORATÓRIA, OBSERVAMOS UMA MUDANÇA DE COMPORTAMENTO DEPOIS DE 2008
+# E VAMOS VERIFICAR SE TEVE EFEITO NA COMPOSIÇÃO DE EXPORTAÇOES
+
+
+#ANTES DE 2008
+for(i in 1:nrow(usa_rel)){
+  
+  str = usa_rel[i, 3]
+  
+  productShare = c(usa_rel[i, 17:36], chn_rel[i, 17:36], jpn_rel[i, 17:36], deu_rel[i, 17:36])
+  anos4 = c(anosA, anosA, anosA, anosA)
+  
+  plot(y = productShare,
+       x = anos4,
+       main = str)
+  
+  print(str)
+  
+  teste2 = lm(as.numeric(productShare)~anos4)
+  
+  print(summary(teste2))
+}
+
+
+#DEPOIS DE 2008
+for(i in 1:nrow(usa_rel)){
+  
+  str = usa_rel[i, 3]
+  
+  productShare = c(usa_rel[i, 6:36], chn_rel[i, 6:16], jpn_rel[i, 6:16], deu_rel[i, 6:16])
+  anos4 = c(anosD, anosD, anosD, anosD)
+  
+  plot(y = productShare,
+       x = anos4,
+       main = str)
+  
+  print(str)
+  
+  teste2 = lm(as.numeric(productShare)~anos4)
+  
+  print(summary(teste2))
+}
 
 
